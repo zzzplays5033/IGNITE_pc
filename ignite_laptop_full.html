@@ -1,148 +1,672 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>IGNITE – Wissen entfachen</title>
 <style>
-  body {font-family: Arial, sans-serif; margin:0; padding:0; background: linear-gradient(135deg, #141414, #2b2b2b); color: #fff;}
-  header {background: #ff6a00; padding: 20px; font-size: 2em; font-weight: bold; text-align: center;}
-  .container {padding: 20px; max-width: 1200px; margin:auto;}
-  .card {background: #1f1f1f; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.3);}
-  h2, h3 {margin: 5px 0; color:#ff6a00;}
-  button {background: #ff6a00; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; margin: 5px; cursor: pointer; font-size: 1em;}
-  button:hover {background: #ff8533;}
-  .progress-bar {background: #333; border-radius: 8px; overflow: hidden; height: 20px; margin-top:5px;}
-  .progress {height: 100%; background: #ff6a00; width: 0%; transition: width 0.5s;}
-  .streak {font-size: 1.2em;}
-  #chatBox {background:#333; margin-top:10px; padding:10px; height:150px; overflow:auto; border-radius:8px;}
-  input[type=text] {width:70%; padding:5px; margin:5px 0;}
-  canvas {background: #222; border-radius: 8px; margin-top:10px;}
+  :root{
+    --bg:#0f1226; --panel:#171b34; --panel-2:#1e2446;
+    --text:#e8ecff; --text-dim:#b7c1ff; --muted:#92a1ff;
+    --accent:#ff7a59; --accent-2:#ff9e59;
+    --good:#38d39f; --warn:#ffd166; --bad:#ef476f;
+    --card:#131737; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--text);
+    background:
+      radial-gradient(900px 350px at 80% -10%,rgba(255,122,89,.18),transparent),
+      radial-gradient(800px 400px at -10% 10%,rgba(255,158,89,.14),transparent),
+      var(--bg);
+    font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+  a{color:inherit;text-decoration:none}
+  .shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+  aside{padding:20px;border-right:1px solid rgba(255,255,255,.06);backdrop-filter:blur(8px)}
+  main{padding:18px 18px 64px}
+  @media (max-width:1024px){
+    .shell{grid-template-columns:1fr}
+    aside{position:sticky; top:0; z-index:5; background:linear-gradient(180deg,#0f1226ee,#0f1226c0)}
+    .sidegrid{grid-template-columns:1fr}
+  }
+
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .logo{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow);font-size:24px
+  }
+  .brand h1{font-size:18px;margin:0}
+  .brand small{color:var(--text-dim)}
+  .subtitle{font-size:12px;color:var(--text-dim)}
+
+  nav .tab{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;color:var(--text-dim);cursor:pointer}
+  nav .tab:hover{background:rgba(255,255,255,.05);color:var(--text)}
+  nav .tab.active{background:linear-gradient(135deg,rgba(255,122,89,.2),rgba(255,158,89,.2));color:#fff}
+  .ico{width:22px}
+
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow)
+  }
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sidegrid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media (max-width:1100px){ .g2,.g3{grid-template-columns:1fr} }
+
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{
+    display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;
+    background:linear-gradient(135deg,rgba(255,122,89,.12),rgba(255,158,89,.08));border:1px solid rgba(255,255,255,.08)
+  }
+  .kpi .big{font-weight:800;font-size:20px}
+  .kpi .label{font-size:12px;color:var(--text-dim)}
+  .streak{display:flex;align-items:center;gap:8px}
+  .flame{filter:drop-shadow(0 6px 10px rgba(255,115,0,.35))}
+  @media (max-width:480px){ .kpis{grid-template-columns:1fr} }
+
+  .progress{height:10px;border-radius:999px;background:#0e1030;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--good),#4cd4f0)}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .pill{padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);font-size:12px}
+  .tag{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-size:12px;opacity:.9}
+  .small{font-size:12px}
+  .muted{color:var(--text-dim)}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+
+  .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;cursor:pointer;box-shadow:var(--shadow);font-weight:700}
+  .btn.secondary{background:linear-gradient(135deg,#2a2f55,#20254a)}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.18)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  input,select,textarea{
+    background:#0f1333;border:1px solid rgba(255,255,255,.12);border-radius:12px;color:var(--text);
+    padding:10px 12px; outline:none; min-width:0
+  }
+  textarea{min-height:100px;width:100%;resize:vertical}
+
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .bell{position:relative;width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#262b54,#1b2044);display:grid;place-items:center;border:1px solid rgba(255,255,255,.12)}
+  .bell .badge{position:absolute;top:-6px;right:-6px;background:var(--bad);color:#fff;border-radius:999px;font-size:11px;padding:3px 6px;display:none}
+
+  .flash{display:grid;gap:10px}
+  .cardface{border-radius:16px;padding:18px;background:linear-gradient(160deg,#13183b,#0f1333);border:1px solid rgba(255,255,255,.08);min-height:120px}
+  .mcWrap{display:grid;gap:8px}
+
+  .chat{display:grid;grid-template-rows:1fr auto;gap:10px;height:320px}
+  .chatlog{overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:6px}
+  .bubble{max-width:75%;padding:10px 12px;border-radius:14px;background:#10163a;border:1px solid rgba(255,255,255,.1)}
+  .bubble.me{margin-left:auto;background:#0f224a}
+
+  .hidden{display:none !important}
+  .canvas-wrap{background:#0e1230;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px}
 </style>
 </head>
 <body>
-<header>IGNITE – Wissen entfachen</header>
-<div class="container">
-
-  <!-- Profil -->
-  <div class="card">
-    <h2>Dein Profil</h2>
-    <p>Punkte: <span id="points">0</span></p>
-    <p>Level: <span id="level">Noob</span></p>
-    <p class="streak">🔥 Streak: <span id="streak">0</span> Tage</p>
-    <button onclick="addPoint()">+ Punkte</button>
-    <button onclick="addStreak()">+ Streak</button>
-  </div>
-
-  <!-- Decks -->
-  <div class="card">
-    <h3>Deine Decks</h3>
-    <div class="card">
-      <p>Beispiel-Deck: Geschichte</p>
-      <div class="progress-bar"><div class="progress" id="deckProgress"></div></div>
-      <p id="deckPercent">0%</p>
+<div class="shell">
+  <aside>
+    <div class="brand">
+      <div class="logo">🔥</div>
+      <div>
+        <h1>IGNITE</h1>
+        <small>Wissen entfachen</small>
+      </div>
     </div>
-    <button onclick="studyDeck()">Lernen</button>
-  </div>
 
-  <!-- Prüfungen -->
-  <div class="card">
-    <h3>Kalender & Prüfungen</h3>
-    <p>Anstehende Prüfung: Geschichte – 30.09.2025</p>
-    <div class="progress-bar"><div class="progress" id="examProgress"></div></div>
-    <p id="examPercent">0%</p>
-    <canvas id="studyChart" width="400" height="200"></canvas>
-    <button onclick="updateExamProgress()">Lernfortschritt erhöhen</button>
-  </div>
+    <nav class="list">
+      <div class="tab active" data-page="dashboard"><span class="ico">🏠</span> Dashboard</div>
+      <div class="tab" data-page="study"><span class="ico">🃏</span> Lernen</div>
+      <div class="tab" data-page="calendar"><span class="ico">🗓️</span> Kalender</div>
+      <div class="tab" data-page="friends"><span class="ico">👥</span> Freunde & Chat</div>
+      <div class="tab" data-page="settings"><span class="ico">⚙️</span> Einstellungen</div>
+    </nav>
 
-  <!-- Freunde -->
-  <div class="card">
-    <h3>Freunde & Multiplayer</h3>
-    <p>Freunde-Rangliste:</p>
-    <ul id="friendList">
-      <li>Du – 0 Punkte</li>
-      <li>Max – 120 Punkte</li>
-      <li>Anna – 90 Punkte</li>
-    </ul>
-  </div>
+    <div style="margin-top:14px" class="sidegrid">
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi">
+            <div>
+              <div class="label">Rang</div>
+              <div id="rankName" class="big">Noob</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div>
+              <div class="label">Level</div>
+              <div id="levelValue" class="big">1</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div>
+              <div class="label">Punkte</div>
+              <div id="pointsValue" class="big">0</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="streak"><span class="flame">🔥</span><div><div class="label">Streak</div><div class="big" id="streakDays">0</div></div></div>
+          </div>
+        </div>
+      </div>
 
-  <!-- Chat -->
-  <div class="card">
-    <h3>Chat</h3>
-    <input type="text" id="chatInput" placeholder="Nachricht...">
-    <button onclick="sendMessage()">Senden</button>
-    <div id="chatBox"></div>
-  </div>
+      <div class="card">
+        <div class="panel-h"><b>Meine Decks</b><button class="btn small" id="addDeckBtn">+ Deck</button></div>
+        <div id="deckList" class="list"></div>
+      </div>
+    </div>
+  </aside>
 
-  <!-- KI-Karteikarten -->
-  <div class="card">
-    <h3>KI-Karteikarten</h3>
-    <input type="text" id="kiInput" placeholder="Text oder Bild-URL...">
-    <button onclick="generateCard()">Karte erstellen</button>
-    <div id="kiOutput"></div>
-  </div>
+  <main>
+    <div class="header">
+      <div class="row">
+        <span class="pill">Demo – lokal im Browser</span>
+        <span class="pill">Speicher: localStorage</span>
+      </div>
+      <div class="bell" id="bell"><span>🔔</span><span class="badge" id="bellBadge">1</span></div>
+    </div>
 
+    <section id="page-dashboard" class="grid g3">
+      <div class="card">
+        <div class="panel-h"><b>Anstehende Prüfungen</b><button class="btn ghost small" id="addExamBtn">+ Prüfung</button></div>
+        <div id="examList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <div class="panel-h"><b>Diese Woche</b><span class="subtitle">Gelernt vs. geplant (Minuten)</span></div>
+        <div class="canvas-wrap">
+          <canvas id="weekChart" width="620" height="220"></canvas>
+        </div>
+        <div class="row small muted" style="justify-content:space-between;margin-top:8px">
+          <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+        </div>
+        <div class="row" style="margin-top:10px;gap:12px">
+          <span class="tag">Geplant: <span id="plannedTotal">0</span> min</span>
+          <span class="tag">Gelernt: <span id="learnedTotal">0</span> min</span>
+          <button class="btn small" id="log15">+15m gelernt</button>
+          <button class="btn small" id="plan45">Heute 45m planen</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="panel-h"><b>Vorschläge für heute</b><button class="btn ghost small" id="refreshSuggest">Aktualisieren</button></div>
+        <div id="suggestList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="page-study" class="hidden">
+      <div class="grid g2">
+        <div class="card">
+          <div class="panel-h"><b>Deck & Modus</b></div>
+          <div class="grid">
+            <div class="row">
+              <select id="deckSelect"></select>
+              <select id="modeSelect">
+                <option value="Writing">Schreiben ✍️</option>
+                <option value="MultipleChoice">Multiple Choice ✅</option>
+              </select>
+              <button class="btn" id="nextCardBtn">Nächste Karte</button>
+            </div>
+
+            <div class="flash">
+              <div class="cardface" id="questionBox">Frage erscheint hier …</div>
+              <div id="writingWrap">
+                <input id="answerInput" placeholder="Deine Antwort …" />
+                <div class="row">
+                  <button class="btn" id="checkAnswerBtn">Prüfen</button>
+                  <button class="btn secondary" id="revealBtn">Auflösung zeigen</button>
+                </div>
+              </div>
+              <div id="mcWrap" class="mcWrap hidden"></div>
+              <div class="muted small" id="resultMsg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="panel-h"><b>Inhalte hinzufügen (KI)</b><span class="subtitle">Wähle, was es ist → bessere Aufgaben</span></div>
+          <div class="grid">
+            <div class="row">
+              <select id="inputType">
+                <option value="LearningText">Lerntext</option>
+                <option value="Flashcards">Karteikarten (Rohtext)</option>
+                <option value="Sentences">Einzelsätze</option>
+              </select>
+              <button class="btn" id="processInputBtn">Erzeugen</button>
+            </div>
+            <textarea id="rawInput" placeholder="Füge hier Lerntext/Stichpunkte ein … (Bilder nicht unterstützt)"></textarea>
+            <div class="list" id="processOutput"></div>
+            <div class="row">
+              <button class="btn secondary" id="addToDeckBtn">Als Karten ins ausgewählte Deck</button>
+              <button class="btn ghost" id="explainBtn">Erklären 🔍</button>
+            </div>
+            <div class="small muted">Echte KI per API anschließen: siehe Kommentar im Code (fetch-Hook).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-calendar" class="hidden">
+      <div class="grid g2">
+        <div class="card">
+          <div class="panel-h"><b>Planung (heute)</b></div>
+          <div class="row">
+            <input type="number" id="planMinutes" value="45" min="0" step="5" style="width:120px">
+            <button class="btn" id="applyPlanToday">Planen</button>
+          </div>
+          <div class="subtitle" style="margin-top:8px">Wirkt sich auf das Wochen-Diagramm & Vorschläge aus.</div>
+        </div>
+        <div class="card">
+          <div class="panel-h"><b>Loggen</b></div>
+          <div class="row">
+            <input type="number" id="logMinutes" value="15" min="0" step="5" style="width:120px">
+            <button class="btn" id="applyLogToday">Gelernt hinzufügen</button>
+          </div>
+          <div class="subtitle" style="margin-top:8px">Streak & Punkte steigern sich über richtige Antworten.</div>
+        </div>
+      </div>
+      <div style="height:14px"></div>
+      <div class="card">
+        <div class="panel-h"><b>Diese Woche</b><span class="subtitle">Übersicht</span></div>
+        <div class="canvas-wrap">
+          <canvas id="weekChart2" width="900" height="240"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-friends" class="hidden">
+      <div class="grid g2">
+        <div class="card">
+          <div class="panel-h"><b>Freunde</b><button class="btn ghost small" id="addFriendBtn">+ Freund</button></div>
+          <div id="friendList" class="list"></div>
+        </div>
+        <div class="card">
+          <div class="panel-h"><b>Chat</b><button class="btn small" id="duelBtn">1v1 (gleiches Deck)</button></div>
+          <div class="chat">
+            <div class="chatlog" id="chatLog"></div>
+            <div class="row">
+              <input id="chatInput" placeholder="Nachricht schreiben …" style="flex:1">
+              <button class="btn" id="sendMsgBtn">Senden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-settings" class="hidden">
+      <div class="card">
+        <b>Profil</b>
+        <div class="row" style="margin-top:10px">
+          <input id="usernameInput" placeholder="Dein Name" />
+          <button class="btn" id="saveProfile">Speichern</button>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
-let points = 0;
-let streak = 0;
-let deckProgress = 0;
-let examProgress = 0;
+/* ================== STATE & STORAGE ==================
+   Single-file demo app. For production, split code & use backend.
+   To enable real KI: replace the commented fetch-hook in the "Process Input" section
+   with your server/OpenAI endpoint (server required to keep API keys secret).
+=============================================== */
+const state = JSON.parse(localStorage.getItem('ignite_state_v1')||'null') || {
+  user:{ username:'Player', points:0, level:1, rank:'Noob', streakDays:0 },
+  decks:[
+    {id:'d1', name:'Geschichte – Aufklärung', target:5, cards:[
+      {id:'c1', q:'Wann begann die Französische Revolution?', a:'1789', known:false},
+      {id:'c2', q:'Wer schrieb den Gesellschaftsvertrag?', a:'Jean-Jacques Rousseau', known:false},
+      {id:'c3', q:'Drei Stände?', a:'Klerus, Adel, Dritter Stand', known:false},
+    ]}
+  ],
+  exams:[ {id:'e1', name:'Geschichte-Test', date:addDays(new Date(),6), deckId:'d1'} ],
+  learned:{}, planned:{},
+  friends:[{id:'u2', name:'Alex'},{id:'u3', name:'Mina'}],
+  chat:{'u2':[{me:true,txt:'Lernst du heute? 😅',ts:Date.now()-100000}],'u3':[]},
+  notifications:1,
+  lastCard:null,
+  mode:'Writing',
+  currentChat:'u2'
+};
+persist();
+function persist(){ localStorage.setItem('ignite_state_v1', JSON.stringify(state)); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function fmtDate(d){ d=new Date(d); return d.toISOString().slice(0,10); }
+function todayKey(){ return fmtDate(new Date()); }
 
-function addPoint() { points += 10; updateUI(); }
-function addStreak() { streak += 1; updateUI(); }
-function getLevel() {
-  if(points<50) return "Noob";
-  if(points<150) return "Anfänger";
-  if(points<300) return "Pro";
-  return "Meister";
+/* ======= UI Helpers ======= */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+$$('.tab').forEach(t=>{
+  t.onclick=()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+    document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+    const page=t.dataset.page; $('#page-'+page).classList.remove('hidden');
+    if(page==='dashboard'){ drawWeek(); suggestToday(); }
+    if(page==='study'){ refreshDeckSelect(); }
+    if(page==='calendar'){ drawWeek('#weekChart2'); }
+    if(page==='friends'){ renderFriends(); renderChat(state.currentChat||'u2'); }
+  };
+});
+const bellBadge=$('#bellBadge');
+function setBadge(){ bellBadge.style.display = state.notifications>0?'block':'none'; bellBadge.textContent=state.notifications; }
+$('#bell').onclick=()=>{ state.notifications=0; setBadge(); persist(); }; setBadge();
+
+/* KPIs */
+function rankFromPoints(p){
+  if(p<200) return 'Noob';
+  if(p<600) return 'Anfänger';
+  if(p<1200) return 'Pro';
+  return 'Meister';
 }
-function studyDeck() {
-  deckProgress += 10;
-  if(deckProgress>100) deckProgress=100;
-  document.getElementById("deckProgress").style.width = deckProgress+"%";
-  document.getElementById("deckPercent").innerText = deckProgress+"%";
+function updateKPI(){
+  $('#pointsValue').textContent = state.user.points;
+  $('#levelValue').textContent = state.user.level;
+  $('#rankName').textContent = state.user.rank;
+  $('#streakDays').textContent = state.user.streakDays;
 }
-function updateExamProgress() {
-  examProgress += 5;
-  if(examProgress>100) examProgress=100;
-  document.getElementById("examProgress").style.width = examProgress+"%";
-  document.getElementById("examPercent").innerText = examProgress+"%";
-  updateChart();
+updateKPI();
+
+/* ===== DECKS ===== */
+function deckProgress(deck){ if(!deck.cards.length) return 0; const known=deck.cards.filter(c=>c.known).length; return Math.round(100*known/deck.cards.length); }
+function renderDecks(){
+  const wrap=$('#deckList'); wrap.innerHTML='';
+  state.decks.forEach(d=>{
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML=`
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">${d.name}</div>
+          <div class="small muted">${d.cards.length} Karten • Zielnote ${d.target||5}</div>
+          <div class="progress" style="margin-top:6px"><i style="width:${deckProgress(d)}%"></i></div>
+          <div class="small muted">${deckProgress(d)}% gelernt</div>
+        </div>
+        <div class="row">
+          <button class="btn small" onclick="selectDeck('${d.id}')">Lernen</button>
+          <button class="btn ghost small" onclick="editDeck('${d.id}')">⋯</button>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(el);
+  });
 }
-function sendMessage() {
-  let msg = document.getElementById("chatInput").value;
-  if(msg.trim()!="") {
-    let chatBox = document.getElementById("chatBox");
-    chatBox.innerHTML += "<p>"+msg+"</p>";
-    chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById("chatInput").value="";
+renderDecks();
+$('#addDeckBtn').onclick=()=>{
+  const name=prompt('Deckname?'); if(!name) return;
+  state.decks.push({id:'d'+Date.now(), name, target:5, cards:[]});
+  persist(); renderDecks(); refreshDeckSelect();
+};
+function editDeck(id){
+  const deck=state.decks.find(d=>d.id===id); if(!deck) return;
+  const act=prompt(`Deck bearbeiten:\n1 = umbenennen\n2 = Zielnote setzen\n3 = Karte hinzufügen (Frage|Antwort)\n4 = Karte löschen (Index)`);
+  if(act==='1'){ const n=prompt('Neuer Name?', deck.name); if(n){ deck.name=n; } }
+  if(act==='2'){ const t=prompt('Zielnote (1–6)?', deck.target||5); deck.target=parseInt(t||'5',10); }
+  if(act==='3'){ const line=prompt('Karte im Format Frage|Antwort:'); if(line&&line.includes('|')){ const [q,a]=line.split('|'); deck.cards.push({id:'c'+Date.now(), q:q.trim(), a:a.trim(), known:false}); } }
+  if(act==='4'){ const idx=prompt('Index (1..'+deck.cards.length+')'); const i=parseInt(idx||'0',10)-1; if(deck.cards[i]) deck.cards.splice(i,1); }
+  persist(); renderDecks(); refreshDeckSelect();
+}
+function selectDeck(id){
+  $('#page-study').classList.remove('hidden');
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.tab[data-page="study"]').classList.add('active');
+  refreshDeckSelect(); $('#deckSelect').value=id;
+}
+
+/* ===== EXAMS ===== */
+function renderExams(){
+  const wrap=$('#examList'); wrap.innerHTML='';
+  state.exams.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  state.exams.forEach(e=>{
+    const deck=state.decks.find(d=>d.id===e.deckId);
+    const prog=deck?deckProgress(deck):0;
+    const daysLeft=Math.max(0,Math.ceil((new Date(e.date)-new Date())/86400000));
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">${e.name}</div>
+          <div class="small muted">${daysLeft} Tage • Deck: ${deck?deck.name:'—'} • Zielnote ${deck?deck.target:5}</div>
+          <div class="progress" style="margin-top:6px"><i style="width:${prog}%;background:linear-gradient(90deg,var(--warn),#ff9d66)"></i></div>
+        </div>
+        <span class="tag">${prog}%</span>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+renderExams();
+$('#addExamBtn').onclick=()=>{
+  const name=prompt('Prüfungsname?'); if(!name) return;
+  const date=prompt('Datum (YYYY-MM-DD)?', fmtDate(addDays(new Date(),7)));
+  const deckId=(state.decks[0]||{}).id;
+  state.exams.push({id:'e'+Date.now(), name, date, deckId});
+  persist(); renderExams(); suggestToday();
+};
+
+/* ===== WEEK CHART & PLAN/LOG ===== */
+function weekData(){
+  const now=new Date(); const day=(now.getDay()+6)%7; const monday=new Date(now); monday.setDate(now.getDate()-day);
+  const learned=[], planned=[]; let sumL=0,sumP=0;
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i); const k=fmtDate(d);
+    const l=state.learned[k]||0, p=state.planned[k]||0;
+    learned.push(l); planned.push(p); sumL+=l; sumP+=p;
+  }
+  return {learned, planned, sumL, sumP};
+}
+function drawWeek(sel='#weekChart'){
+  const c=document.querySelector(sel); const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const {learned, planned, sumL, sumP}=weekData();
+  if(sel==='#weekChart'){ $('#learnedTotal').textContent=sumL; $('#plannedTotal').textContent=sumP; }
+  const W=c.width,H=c.height,pad=30, bw=40, gap=24, base=H-35;
+  ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.moveTo(pad,10); ctx.lineTo(pad,base); ctx.lineTo(W-10,base); ctx.stroke();
+  const max=Math.max(30,...learned,...planned);
+  for(let i=0;i<7;i++){
+    const x=pad+20+i*(bw+gap);
+    const hp=Math.round((planned[i]/max)*(base-30));
+    ctx.fillStyle='rgba(255,158,89,.32)'; ctx.fillRect(x, base-hp, bw, hp);
+    const hl=Math.round((learned[i]/max)*(base-30));
+    ctx.fillStyle='rgba(56,211,159,.9)'; ctx.fillRect(x+6, base-hl, bw-12, hl);
   }
 }
-function generateCard() {
-  let input = document.getElementById("kiInput").value;
-  if(input.trim()!="") {
-    let output = document.getElementById("kiOutput");
-    output.innerHTML += "<div style='background:#444; margin:5px; padding:5px; border-radius:5px;'>Karte erstellt: "+input+"</div>";
-    document.getElementById("kiInput").value="";
+$('#log15').onclick=()=>{ const k=todayKey(); state.learned[k]=(state.learned[k]||0)+15; persist(); drawWeek(); drawWeek('#weekChart2'); };
+$('#plan45').onclick=()=>{ const k=todayKey(); state.planned[k]=45; persist(); drawWeek(); drawWeek('#weekChart2'); };
+$('#applyPlanToday').onclick=()=>{ const v=parseInt($('#planMinutes').value||'0',10); const k=todayKey(); state.planned[k]=v; persist(); drawWeek(); drawWeek('#weekChart2'); };
+$('#applyLogToday').onclick=()=>{ const v=parseInt($('#logMinutes').value||'0',10); const k=todayKey(); state.learned[k]=(state.learned[k]||0)+v; persist(); drawWeek(); drawWeek('#weekChart2'); };
+drawWeek(); drawWeek('#weekChart2');
+
+/* ===== SUGGESTIONS ===== */
+function suggestToday(){
+  const wrap=$('#suggestList'); wrap.innerHTML='';
+  const today=new Date(); const suggestions=[];
+  state.exams.forEach(e=>{
+    const deck=state.decks.find(d=>d.id===e.deckId); if(!deck) return;
+    const daysLeft=Math.max(1,Math.ceil((new Date(e.date)-today)/86400000));
+    const prog=deckProgress(deck);
+    const base=Math.min(120,Math.max(20,60-Math.floor(prog/2)));
+    const urgency=daysLeft<=3?30:daysLeft<=7?15:0;
+    const suggested=Math.max(20,Math.min(120,base+urgency+(deck.target||5)*5));
+    suggestions.push({name:deck.name, minutes:suggested, reason:`${e.name} in ${daysLeft} Tag(en) • Fortschritt ${prog}% • Zielnote ${deck.target||5}`});
+  });
+  if(!suggestions.length){
+    state.decks.sort((a,b)=>deckProgress(a)-deckProgress(b)).slice(0,3).forEach(d=>{
+      const prog=deckProgress(d);
+      suggestions.push({name:d.name, minutes:Math.max(20,60-Math.floor(prog/2)), reason:`Niedriger Fortschritt (${prog}%)`});
+    });
   }
+  suggestions.forEach(s=>{
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML=`<div class="row" style="justify-content:space-between">
+      <div><b>${s.name}</b><div class="small muted">${s.reason}</div></div>
+      <span class="tag">${s.minutes} min</span></div>`;
+    wrap.appendChild(el);
+  });
 }
-function updateUI() {
-  document.getElementById("points").innerText = points;
-  document.getElementById("streak").innerText = streak;
-  document.getElementById("level").innerText = getLevel();
+suggestToday();
+$('#refreshSuggest').onclick=suggestToday;
+
+/* ===== STUDY: MODES & CARDS ===== */
+function refreshDeckSelect(){
+  const sel=$('#deckSelect'); sel.innerHTML='';
+  state.decks.forEach(d=>{ const o=document.createElement('option'); o.value=d.id; o.textContent=d.name; sel.appendChild(o); });
 }
-function updateChart() {
-  let ctx = document.getElementById("studyChart").getContext("2d");
-  ctx.clearRect(0,0,400,200);
-  ctx.fillStyle = "#ff6a00";
-  let days = [2, 3, 1, 4, 5, 2, 3]; // Beispiel: Lernstunden pro Tag
-  for(let i=0; i<days.length; i++) {
-    ctx.fillRect(50*i+20, 180-days[i]*20, 30, days[i]*20);
+refreshDeckSelect();
+$('#modeSelect').onchange=e=>{ state.mode=e.target.value; persist(); toggleMode(); };
+function toggleMode(){ if(state.mode==='Writing'){ $('#writingWrap').classList.remove('hidden'); $('#mcWrap').classList.add('hidden'); } else { $('#writingWrap').classList.add('hidden'); $('#mcWrap').classList.remove('hidden'); } }
+toggleMode();
+
+$('#nextCardBtn').onclick=()=>{
+  const deckId=$('#deckSelect').value || (state.decks[0]||{}).id;
+  const deck=state.decks.find(d=>d.id===deckId); if(!deck || !deck.cards.length){ $('#questionBox').textContent='Kein Inhalt im Deck.'; return; }
+  const order=[...deck.cards].sort((a,b)=>(a.known===b.known?(Math.random()-.5):(a.known?1:-1)));
+  const card=order[0]; state.lastCard={deckId:deck.id, cardId:card.id}; persist();
+  $('#questionBox').textContent=card.q; $('#resultMsg').textContent=''; $('#answerInput').value='';
+  if(state.mode==='MultipleChoice'){ renderMC(deck,card); }
+};
+function getLast(){ if(!state.lastCard) return {deck:null, card:null};
+  const deck=state.decks.find(d=>d.id===state.lastCard.deckId);
+  const card=deck&&deck.cards.find(c=>c.id===state.lastCard.cardId);
+  return {deck, card};
+}
+function renderMC(deck, card){
+  const wrap=$('#mcWrap'); wrap.innerHTML='';
+  const options=new Set([card.a]);
+  while(options.size<4 && deck.cards.length>options.size){
+    const pick=deck.cards[Math.floor(Math.random()*deck.cards.length)].a; options.add(pick);
   }
+  [...options].sort(()=>Math.random()-.5).forEach(opt=>{
+    const b=document.createElement('button'); b.className='btn secondary'; b.textContent=opt; b.onclick=()=>checkAnswer(opt); wrap.appendChild(b);
+  });
 }
-updateChart();
+$('#checkAnswerBtn').onclick=()=>checkAnswer($('#answerInput').value.trim());
+$('#revealBtn').onclick=()=>{ const {card}=getLast(); if(!card)return; $('#resultMsg').textContent=`Antwort: ${card.a}`; $('#resultMsg').style.color='var(--muted)'; };
+function checkAnswer(val){
+  const {deck, card}=getLast(); if(!card) return;
+  const ok=val.toLowerCase()===card.a.toLowerCase();
+  $('#resultMsg').textContent= ok?'Richtig! +10 Punkte':'Falsch';
+  $('#resultMsg').style.color= ok?'var(--good)':'var(--bad)';
+  if(ok){
+    card.known=true;
+    state.user.points+=10;
+    state.user.level=Math.max(1,Math.floor(state.user.points/100)+1);
+    state.user.rank=rankFromPoints(state.user.points);
+  }
+  persist(); updateKPI(); renderDecks(); renderExams(); suggestToday();
+}
+
+/* ===== INPUT PIPELINE + KI HOOK ===== */
+$('#processInputBtn').onclick= async ()=>{
+  const t=$('#inputType').value; const raw=$('#rawInput').value.trim();
+  const out=$('#processOutput'); out.innerHTML='';
+  if(!raw){ out.innerHTML=`<div class="card">Bitte gib zuerst einen Text ein.</div>`; return; }
+
+  // ---- ECHTE KI ANBINDEN (OPTIONAL) ----
+  // Beispiel-Server expected: POST /generate-cards {type:'Flashcards', text:'...'} -> { items:[{q,a}, ...] }
+  // fetch('https://DEIN-BACKEND/ignite/generate-cards', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:t, text:raw}) })
+  //  .then(r=>r.json()).then(data=>{ data.items.forEach((c,i)=>{ ... add to UI ... }) })
+  //  .catch(e=>{ console.warn('KI fehlgeschlagen', e); /* fallback below */ });
+
+  // Lokal fallback parser
+  if(t==='Flashcards'){
+    const lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,12);
+    lines.forEach((line,i)=>{
+      const p=line.includes(':')?line.split(':'):line.includes('-')?line.split('-'):[line,'(erklären)'];
+      const q = (p[0]||'Frage').trim(); const a=(p[1]||'Antwort').trim();
+      const d=document.createElement('div'); d.className='card';
+      d.innerHTML=`<b>Karte ${i+1}</b><div class="small muted">Frage</div>${q}<div class="small muted" style="margin-top:6px">Antwort</div>${a}`;
+      out.appendChild(d);
+    });
+  } else {
+    const sentences = raw.split(/[.!?]\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>6).slice(0,10);
+    sentences.forEach((s,i)=>{
+      const q = t==='Sentences' ? `Worum geht es in: „${s.slice(0,60)}“?`
+                                 : `Wichtigster Punkt aus: „${s.slice(0,60)}“?`;
+      const d=document.createElement('div'); d.className='card';
+      d.innerHTML=`<b>Karte ${i+1}</b><div class="small muted">Frage</div>${q}<div class="small muted" style="margin-top:6px">Antwort</div>${s}`;
+      out.appendChild(d);
+    });
+  }
+};
+$('#addToDeckBtn').onclick=()=>{
+  const deckId=$('#deckSelect').value || (state.decks[0]||{}).id;
+  const deck=state.decks.find(d=>d.id===deckId); if(!deck){ alert('Kein Deck gewählt'); return; }
+  const raw=$('#rawInput').value.trim(); const out=$('#processOutput');
+  const cards=[];
+  out.querySelectorAll('.card').forEach(div=>{
+    const html=div.innerHTML;
+    const mq=html.match(/Frage<\/div>([^<]+)/); const ma=html.match(/Antwort<\/div>([^<]+)/);
+    if(mq && ma){ cards.push({q:mq[1].trim(), a:ma[1].trim()}); }
+  });
+  if(!cards.length){
+    const parts=raw.split(/[.\n!?]+/).map(x=>x.trim()).filter(x=>x.length>6).slice(0,6);
+    parts.forEach(p=>cards.push({q:`Worum geht es in: „${p.slice(0,60)}“?`, a:p}));
+  }
+  cards.forEach((c,i)=> deck.cards.push({id:'c'+Date.now()+i, q:c.q, a:c.a, known:false}));
+  persist(); renderDecks(); renderExams(); alert(`${cards.length} Karten hinzugefügt!`);
+};
+$('#explainBtn').onclick= async ()=>{
+  const topic=prompt('Was soll erklärt werden? (Begriff/Thema)'); if(!topic) return;
+  const out=$('#processOutput');
+  // Optional: tatsächliche KI-Call (siehe oben)
+  const text = `Kurze, einfache Erklärung zu „${topic}“ (Stub): erkläre in 3–5 Sätzen, mit Beispiel & Merksatz.`;
+  const d=document.createElement('div'); d.className='card';
+  d.innerHTML=`<b>Erklärung</b><div class="small muted">${topic}</div><div style="margin-top:6px">${text}</div>`;
+  out.prepend(d);
+};
+
+/* ===== FRIENDS & CHAT & DUEL ===== */
+function renderFriends(){
+  const wrap=$('#friendList'); wrap.innerHTML='';
+  state.friends.forEach(f=>{
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center">
+      <div><b>${f.name}</b><div class="small muted">Freund</div></div>
+      <div class="row">
+        <button class="btn small" onclick="openChat('${f.id}')">Chat</button>
+        <button class="btn ghost small" onclick="invite('${f.id}')">Einladen</button>
+      </div></div>`;
+    wrap.appendChild(el);
+  });
+}
+renderFriends();
+function openChat(id){ state.currentChat=id; persist(); renderChat(id); }
+function renderChat(id){
+  const log=$('#chatLog'); log.innerHTML=''; const msgs=state.chat[id]=state.chat[id]||[];
+  msgs.forEach(m=>{ const b=document.createElement('div'); b.className='bubble'+(m.me?' me':''); b.textContent=m.txt; log.appendChild(b); });
+  log.scrollTop=log.scrollHeight;
+}
+$('#addFriendBtn').onclick=()=>{
+  const name=prompt('Name des Freundes?'); if(!name) return;
+  const id='u'+Date.now(); state.friends.push({id,name}); state.chat[id]=[]; persist(); renderFriends();
+};
+$('#sendMsgBtn').onclick=()=>{
+  const id=state.currentChat || (state.friends[0]||{}).id; if(!id){ alert('Kein Freund'); return; }
+  const val=$('#chatInput').value.trim(); if(!val) return;
+  state.chat[id].push({me:true, txt:val, ts:Date.now()});
+  state.notifications+=1; setBadge();
+  $('#chatInput').value=''; renderChat(id); persist();
+};
+function invite(id){ alert('Einladung gesendet an '+(state.friends.find(f=>f.id===id)?.name||id)); state.notifications+=1; setBadge(); persist(); }
+$('#duelBtn').onclick=()=>{
+  const deckId=$('#deckSelect').value || (state.decks[0]||{}).id;
+  const deck=state.decks.find(d=>d.id===deckId); if(!deck||!deck.cards.length){ alert('Wähle ein Deck mit Karten'); return; }
+  const qs=[...deck.cards].sort(()=>Math.random()-.5).slice(0,5);
+  let my=0, opp=0;
+  qs.forEach(q=>{ if(Math.random()<0.6) my++; if(Math.random()<0.5) opp++; });
+  alert(`Duel Ergebnis\nDu: ${my} / 5\nGegner: ${opp} / 5\n${my>opp?'🏆 Sieg!':'😬 Niederlage'}`);
+};
+
+/* ===== PROFILE & HELPERS ===== */
+$('#usernameInput').value=state.user.username;
+$('#saveProfile').onclick=()=>{ state.user.username=$('#usernameInput').value||'Player'; persist(); alert('Gespeichert'); };
+function setBadge(){ const bb=$('#bellBadge'); bb.style.display=state.notifications>0?'block':'none'; bb.textContent=state.notifications; }
+refreshDeckSelect(); renderDecks(); renderExams(); suggestToday(); setBadge();
+
+/* External helper for future hooks */
+function rewardPoints(n=10){
+  state.user.points+=n; state.user.level=Math.max(1,Math.floor(state.user.points/100)+1); state.user.rank=rankFromPoints(state.user.points);
+  persist(); updateKPI();
+}
 </script>
 </body>
 </html>
