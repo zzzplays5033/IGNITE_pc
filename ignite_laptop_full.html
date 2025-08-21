@@ -5,23 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IGNITE – Wissen entfachen</title>
 <style>
-  body {font-family: Arial, sans-serif; margin:0; padding:0; background: linear-gradient(135deg, #1b1b2f, #2c2c44); color: #fff;}
+  body {font-family: Arial, sans-serif; margin:0; padding:0; background: linear-gradient(135deg, #141414, #2b2b2b); color: #fff;}
   header {background: #ff6a00; padding: 20px; font-size: 2em; font-weight: bold; text-align: center;}
-  .container {padding: 20px; max-width: 900px; margin:auto;}
-  .card {background: #2e2e40; border-radius: 12px; padding: 20px; margin: 15px 0;}
-  h2, h3 {margin: 5px 0;}
+  .container {padding: 20px; max-width: 1200px; margin:auto;}
+  .card {background: #1f1f1f; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.3);}
+  h2, h3 {margin: 5px 0; color:#ff6a00;}
   button {background: #ff6a00; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; margin: 5px; cursor: pointer; font-size: 1em;}
   button:hover {background: #ff8533;}
-  .progress-bar {background: #444; border-radius: 8px; overflow: hidden; height: 20px; margin-top:5px;}
+  .progress-bar {background: #333; border-radius: 8px; overflow: hidden; height: 20px; margin-top:5px;}
   .progress {height: 100%; background: #ff6a00; width: 0%; transition: width 0.5s;}
   .streak {font-size: 1.2em;}
-  #chatBox {background:#444; margin-top:10px; padding:10px; height:150px; overflow:auto;}
+  #chatBox {background:#333; margin-top:10px; padding:10px; height:150px; overflow:auto; border-radius:8px;}
   input[type=text] {width:70%; padding:5px; margin:5px 0;}
+  canvas {background: #222; border-radius: 8px; margin-top:10px;}
 </style>
 </head>
 <body>
 <header>IGNITE – Wissen entfachen</header>
 <div class="container">
+
+  <!-- Profil -->
   <div class="card">
     <h2>Dein Profil</h2>
     <p>Punkte: <span id="points">0</span></p>
@@ -31,6 +34,7 @@
     <button onclick="addStreak()">+ Streak</button>
   </div>
 
+  <!-- Decks -->
   <div class="card">
     <h3>Deine Decks</h3>
     <div class="card">
@@ -41,24 +45,28 @@
     <button onclick="studyDeck()">Lernen</button>
   </div>
 
+  <!-- Prüfungen -->
   <div class="card">
     <h3>Kalender & Prüfungen</h3>
     <p>Anstehende Prüfung: Geschichte – 30.09.2025</p>
     <div class="progress-bar"><div class="progress" id="examProgress"></div></div>
     <p id="examPercent">0%</p>
+    <canvas id="studyChart" width="400" height="200"></canvas>
     <button onclick="updateExamProgress()">Lernfortschritt erhöhen</button>
   </div>
 
+  <!-- Freunde -->
   <div class="card">
     <h3>Freunde & Multiplayer</h3>
-    <p>Freunde-Rangliste (Platzhalter):</p>
-    <ul>
+    <p>Freunde-Rangliste:</p>
+    <ul id="friendList">
       <li>Du – 0 Punkte</li>
       <li>Max – 120 Punkte</li>
       <li>Anna – 90 Punkte</li>
     </ul>
   </div>
 
+  <!-- Chat -->
   <div class="card">
     <h3>Chat</h3>
     <input type="text" id="chatInput" placeholder="Nachricht...">
@@ -66,12 +74,14 @@
     <div id="chatBox"></div>
   </div>
 
+  <!-- KI-Karteikarten -->
   <div class="card">
     <h3>KI-Karteikarten</h3>
     <input type="text" id="kiInput" placeholder="Text oder Bild-URL...">
     <button onclick="generateCard()">Karte erstellen</button>
     <div id="kiOutput"></div>
   </div>
+
 </div>
 
 <script>
@@ -99,6 +109,7 @@ function updateExamProgress() {
   if(examProgress>100) examProgress=100;
   document.getElementById("examProgress").style.width = examProgress+"%";
   document.getElementById("examPercent").innerText = examProgress+"%";
+  updateChart();
 }
 function sendMessage() {
   let msg = document.getElementById("chatInput").value;
@@ -113,7 +124,7 @@ function generateCard() {
   let input = document.getElementById("kiInput").value;
   if(input.trim()!="") {
     let output = document.getElementById("kiOutput");
-    output.innerHTML += "<div style='background:#555; margin:5px; padding:5px; border-radius:5px;'>Karte erstellt: "+input+"</div>";
+    output.innerHTML += "<div style='background:#444; margin:5px; padding:5px; border-radius:5px;'>Karte erstellt: "+input+"</div>";
     document.getElementById("kiInput").value="";
   }
 }
@@ -122,6 +133,17 @@ function updateUI() {
   document.getElementById("streak").innerText = streak;
   document.getElementById("level").innerText = getLevel();
 }
+function updateChart() {
+  let ctx = document.getElementById("studyChart").getContext("2d");
+  ctx.clearRect(0,0,400,200);
+  ctx.fillStyle = "#ff6a00";
+  let days = [2, 3, 1, 4, 5, 2, 3]; // Beispiel: Lernstunden pro Tag
+  for(let i=0; i<days.length; i++) {
+    ctx.fillRect(50*i+20, 180-days[i]*20, 30, days[i]*20);
+  }
+}
+updateChart();
 </script>
 </body>
 </html>
+
